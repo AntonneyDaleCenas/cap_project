@@ -1,0 +1,139 @@
+<div class="dashboard-wrapper">
+  
+  <aside class="sidebar">
+    <div class="brand-header">
+      <div class="brand-logo">TI</div>
+      <span class="brand-name">Tax Inspection</span>
+    </div>
+    <nav class="nav-links">
+      <a routerLink="/inspections" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📋</span> Inspections
+      </a>
+      <a routerLink="/analytics" routerLinkActive="active" class="nav-item">
+        <span class="nav-icon">📊</span> Analytics
+      </a>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    
+    <header class="top-navbar">
+      <span class="panel-tag">ADMIN PANEL</span>
+      <div class="user-profile-zone">
+        <div class="user-info">
+          <span class="user-name">Admin User</span>
+          <span class="user-role">ADMINISTRATOR</span>
+        </div>
+        <button type="button" class="btn-signout" (click)="onSignOut()">Sign out</button>
+      </div>
+    </header>
+
+    <div class="view-body">
+      
+      <div class="view-header">
+        <h1 class="view-title">Inspections</h1>
+        <p class="view-subtitle">Business inspection records</p>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card card-blue">
+          <div class="metric-data">
+            <span class="metric-value">4</span>
+            <span class="metric-label">Business Inspections</span>
+          </div>
+          <div class="metric-icon">📋</div>
+        </div>
+        <div class="metric-card card-green">
+          <div class="metric-data">
+            <span class="metric-value text-green">2</span>
+            <span class="metric-label">Completed</span>
+          </div>
+          <div class="metric-icon icon-green">✓</div>
+        </div>
+        <div class="metric-card card-orange">
+          <div class="metric-data">
+            <span class="metric-value text-orange">1</span>
+            <span class="metric-label">Pending</span>
+          </div>
+          <div class="metric-icon icon-orange">🕒</div>
+        </div>
+        <div class="metric-card card-red">
+          <div class="metric-data">
+            <span class="metric-value text-red">1</span>
+            <span class="metric-label">Flagged</span>
+          </div>
+          <div class="metric-icon icon-red">!</div>
+        </div>
+        <div class="metric-card card-blue-alt">
+          <div class="metric-data">
+            <span class="metric-value text-blue">₱68,500</span>
+            <span class="metric-label">Collected</span>
+          </div>
+          <div class="metric-icon icon-blue">₱</div>
+        </div>
+      </div>
+
+      <div class="data-table-container">
+        
+        <div class="search-bar-wrapper">
+          <span class="search-icon">🔍</span>
+          <input 
+            type="text" 
+            [formControl]="searchControl" 
+            placeholder="Search inspections..." 
+            class="search-input"
+          />
+        </div>
+
+        <div class="responsive-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>BUSINESS NAME</th>
+                <th>ADDRESS</th>
+                <th>TYPE</th>
+                <th>STATUS</th>
+                <th>PAYMENT</th>
+                <th>DATE</th>
+                <th class="text-right">AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let record of filteredInspections">
+                <td class="font-bold text-dark">{{ record.id }}</td>
+                <td class="font-medium text-dark">{{ record.businessName }}</td>
+                <td class="text-muted location-cell">
+                  <span class="pin-icon">📍</span> {{ record.address }}
+                </td>
+                <td class="text-dark">{{ record.type }}</td>
+                <td>
+                  <span class="badge status-{{ record.status | lowercase }}">
+                    {{ record.status }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="payment-action-btn"
+                    [class.paid]="record.paymentStatus === 'Paid'"
+                    [class.unpaid]="record.paymentStatus === 'Unpaid'"
+                    (click)="togglePaymentStatus(record)">
+                    {{ record.paymentStatus }}
+                  </button>
+                </td>
+                <td class="text-muted">{{ record.date }}</td>
+                <td class="text-right font-bold text-dark">
+                  {{ record.amount !== null ? '₱' + record.amount.toLocaleString() : '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+</div>

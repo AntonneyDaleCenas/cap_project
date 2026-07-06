@@ -1,0 +1,64 @@
+<div class="inspection-form" style="max-width:900px;margin:24px auto;font-family:Arial,Helvetica,sans-serif">
+	<h3 style="color:#2b4a66;border-left:4px solid #3b82f6;padding-left:10px">Hauler & Material Details</h3>
+
+	<form>
+		<div style="margin-top:16px">
+			<label for="haulerName">Name of Hauler *</label>
+			<input id="haulerName" name="haulerName" type="text" placeholder="Enter hauler name" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+		</div>
+
+		<div style="display:flex;gap:16px;margin-top:16px">
+			<div style="flex:1">
+				<label for="truckPlate">Truck Plate Number *</label>
+				<input id="truckPlate" name="truckPlate" type="text" placeholder="e.g., ABC-1234" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+			</div>
+			<div style="width:220px">
+				<label for="time">Time *</label>
+				<input id="time" name="time" type="time" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+			</div>
+		</div>
+
+		<div style="margin-top:16px">
+			<label>Truck Type *</label>
+			<div style="margin-top:8px;display:flex;gap:16px;align-items:center">
+				<label><input type="radio" name="truckType" value="6"> 6 Wheelers</label>
+				<label><input type="radio" name="truckType" value="8" checked> 8 Wheelers</label>
+				<label><input type="radio" name="truckType" value="10"> 10 Wheelers</label>
+			</div>
+		</div>
+
+		<div style="margin-top:16px">
+			<label for="address">Address *</label>
+			<input id="address" name="address" type="text" placeholder="Enter complete address" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+		</div>
+
+		<div style="margin-top:16px">
+			<label for="source">Source of Material *</label>
+			<input id="source" name="source" type="text" placeholder="Enter source location" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+		</div>
+
+		<div style="margin-top:16px">
+			<label>Kind of Material *</label>
+			<div style="margin-top:8px;display:flex;gap:16px;align-items:center">
+				<label><input type="radio" name="materialKind" value="sand" checked> Sand</label>
+				<label><input type="radio" name="materialKind" value="gravel"> Gravel</label>
+				<label><input type="radio" name="materialKind" value="filling"> Filling Materials</label>
+			</div>
+		</div>
+
+		<div style="display:flex;gap:16px;margin-top:16px">
+			<div style="flex:1">
+				<label for="quantity">Quantity *</label>
+				<input id="quantity" name="quantity" type="text" placeholder="e.g., 10 cubic meters" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+			</div>
+			<div style="flex:1">
+				<label for="receipt">Delivery Receipt # *</label>
+				<input id="receipt" name="receipt" type="text" placeholder="e.g., DR-2026-001" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+			</div>
+		</div>
+
+		<div style="margin-top:24px;text-align:right">
+			<button type="submit" style="background:#2563eb;color:#fff;padding:10px 18px;border:none;border-radius:6px;cursor:pointer">Submit</button>
+		</div>
+	</form>
+</div>
