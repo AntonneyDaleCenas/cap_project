@@ -12,6 +12,16 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
+## Supabase setup
+
+The inspection form and admin dashboard use Supabase instead of the local API. Before starting Angular:
+
+1. Open `src/environments/environment.ts` and set `supabaseUrl` and `supabaseAnonKey` from your Supabase project.
+2. Run the SQL in `../supabase/inspections.sql` in the Supabase SQL Editor.
+3. Start the app with `npm start` from the workspace root.
+
+The table stores the submitted inspection details, allowed volume, excess volume, penalty rate, and penalty amount. The anon key is intended for browser use; keep service-role keys out of the Angular app.
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:

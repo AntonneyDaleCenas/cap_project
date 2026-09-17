@@ -1,139 +1,531 @@
 <div class="dashboard-wrapper">
-  
   <aside class="sidebar">
     <div class="brand-header">
-      <div class="brand-logo">TI</div>
-      <span class="brand-name">Tax Inspection</span>
+      <img class="brand-logo" src="cdo.png" alt="City of Cagayan de Oro logo" />
+      <div class="brand-copy">
+        <div class="brand-name">Tax Inspection</div>
+        <div class="brand-subtitle">Admin Portal</div>
+      </div>
     </div>
-    <nav class="nav-links">
-      <a routerLink="/inspections" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">📋</span> Inspections
-      </a>
-      <a routerLink="/analytics" routerLinkActive="active" class="nav-item">
-        <span class="nav-icon">📊</span> Analytics
-      </a>
+
+    <nav class="nav-links" aria-label="Main navigation">
+      <button type="button" class="nav-item" [class.active]="activeView === 'home'" (click)="showView('home')">
+        <span class="nav-icon">⌂</span>
+        <span>Home</span>
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeView === 'inspections'" (click)="showView('inspections')">
+        <span class="nav-icon">🗂</span>
+        <span>Inspections</span>
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeView === 'analytics'" (click)="showView('analytics')">
+        <span class="nav-icon">📊</span>
+        <span>Analytics</span>
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeView === 'users'" (click)="showView('users')">
+        <span class="nav-icon">♙</span>
+        <span>Users</span>
+      </button>
+      <button type="button" class="nav-item" [class.active]="activeView === 'new-inspection'" (click)="showView('new-inspection')">
+        <span class="nav-icon">＋</span>
+        <span>Inspection Form</span>
+      </button>
     </nav>
+
+    <button type="button" class="sidebar-user" (click)="showView('settings')">
+      <div class="avatar">AU</div>
+      <div class="user-meta">
+        <span class="user-name">Admin User</span>
+        <span class="user-role">ADMINISTRATOR</span>
+      </div>
+    </button>
   </aside>
 
   <main class="main-content">
-    
-    <header class="top-navbar">
-      <span class="panel-tag">ADMIN PANEL</span>
-      <div class="user-profile-zone">
-        <div class="user-info">
-          <span class="user-name">Admin User</span>
-          <span class="user-role">ADMINISTRATOR</span>
-        </div>
-        <button type="button" class="btn-signout" (click)="onSignOut()">Sign out</button>
+    <header class="top-bar">
+      <div class="breadcrumb">
+        <span class="crumb-label">ADMIN PANEL</span>
+        <span class="crumb-separator">|</span>
       </div>
     </header>
 
-    <div class="view-body">
-      
-      <div class="view-header">
-        <h1 class="view-title">Inspections</h1>
-        <p class="view-subtitle">Business inspection records</p>
+    <section class="profile-panel" *ngIf="showProfile">
+      <div class="profile-hero-card">
+        <div class="profile-avatar">AU</div>
+        <div class="profile-meta">
+          <h3>Admin User</h3>
+          <p>admin@taxinspection.gov</p>
+          <span>ADMINISTRATOR · TAX COMPLIANCE DIVISION</span>
+        </div>
+      </div>
+
+      <div class="profile-section">
+        <h4>Profile</h4>
+
+        <div class="profile-field-row">
+          <label>Full Name</label>
+          <div class="profile-field">Admin User</div>
+        </div>
+
+        <div class="profile-field-row">
+          <label>Email Address</label>
+          <div class="profile-field">admin@taxinspection.gov</div>
+        </div>
+
+        <div class="profile-field-row">
+          <label>Role</label>
+          <div class="profile-field">Administrator</div>
+        </div>
+
+        <div class="profile-field-row">
+          <label>Department</label>
+          <div class="profile-field">Tax Compliance Division</div>
+        </div>
+      </div>
+
+      <div class="profile-signout-row">
+        <div class="signout-copy">
+          <h2>Sign Out</h2>
+          <p>End your current session and return to the login screen</p>
+        </div>
+
+        <button type="button" class="signout-button" (click)="onSignOut()">
+          <span class="signout-arrow">→</span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="home-panel" *ngIf="!showProfile && activeView === 'home'">
+      <header class="home-heading">
+        <div>
+          <p class="crumb-label">ADMIN PANEL</p>
+          <h1>Dashboard</h1>
+          <p>Overview of tax inspection activity</p>
+        </div>
+        <button type="button" class="home-primary-action" (click)="showView('inspections')">View inspections</button>
+      </header>
+
+      <div class="home-metrics">
+        <article class="home-metric">
+          <span>Total inspections</span>
+          <strong>{{ inspections.length }}</strong>
+          <small>All submitted records</small>
+        </article>
+        <article class="home-metric home-metric-success">
+          <span>Completed</span>
+          <strong>{{ completedCount }}</strong>
+          <small>Paid assessments</small>
+        </article>
+        <article class="home-metric home-metric-warning">
+          <span>Pending</span>
+          <strong>{{ pendingCount }}</strong>
+          <small>Awaiting payment</small>
+        </article>
+        <article class="home-metric home-metric-amount">
+          <span>Collected</span>
+          <strong>₱{{ collectedAmount.toLocaleString() }}</strong>
+          <small>Recorded payments</small>
+        </article>
+      </div>
+
+      <section class="home-card home-graph-panel">
+        <div class="home-card-heading">
+          <div>
+            <h2>Inspection statistics</h2>
+            <p>Daily and monthly inspection trend</p>
+          </div>
+          <div class="analytics-toggle" aria-label="Chart range selector">
+            <button type="button" [class.active]="chartMode === 'daily'" (click)="chartMode = 'daily'">Daily</button>
+            <button type="button" [class.active]="chartMode === 'monthly'" (click)="chartMode = 'monthly'">Monthly</button>
+          </div>
+        </div>
+
+        <div class="home-graph-body">
+          <p *ngIf="!inspections.length">No inspection data available from the inspections API.</p>
+
+          <svg *ngIf="inspections.length" viewBox="0 0 620 200" role="img" aria-label="Inspection trend chart" preserveAspectRatio="none">
+            <g class="chart-gridlines">
+              <line x1="30" y1="20" x2="590" y2="20"></line>
+              <line x1="30" y1="80" x2="590" y2="80"></line>
+              <line x1="30" y1="140" x2="590" y2="140"></line>
+              <line x1="30" y1="180" x2="590" y2="180"></line>
+            </g>
+            <path [attr.d]="chartLinePath" class="chart-line"></path>
+            <g *ngFor="let point of chartPoints">
+              <circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" class="chart-point"></circle>
+              <text [attr.x]="point.x" [attr.y]="195" text-anchor="middle" class="chart-label">{{ point.label }}</text>
+            </g>
+          </svg>
+        </div>
+      </section>
+
+      <div class="home-columns">
+        <section class="home-card recent-card">
+          <div class="home-card-heading">
+            <div><h2>Recent inspections</h2><p>Latest records from the field</p></div>
+            <button type="button" class="home-link-button" (click)="showView('inspections')">View all</button>
+          </div>
+          <div class="home-empty" *ngIf="!filteredInspections.length">No inspection records available yet.</div>
+          <div class="recent-list" *ngIf="filteredInspections.length">
+            <div class="recent-row" *ngFor="let record of (filteredInspections | slice:0:5)" (click)="openInspection(record); showView('inspections')">
+              <div class="recent-avatar">{{ record.businessName.slice(0, 1).toUpperCase() }}</div>
+              <div class="recent-info"><strong>{{ record.businessName }}</strong><small>{{ record.address }} · {{ record.date }}</small></div>
+              <span class="recent-status" [ngClass]="getEffectiveStatus(record).toLowerCase()">{{ getEffectiveStatus(record) }}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="home-card quick-card">
+          <div class="home-card-heading"><div><h2>Quick access</h2><p>Common admin tasks</p></div></div>
+          <button type="button" class="quick-action" (click)="showView('users')"><span>♙</span><div><strong>Manage users</strong><small>Activate or deactivate officers</small></div><b>›</b></button>
+          <button type="button" class="quick-action" (click)="showView('analytics')"><span>▥</span><div><strong>View statistics</strong><small>Review inspection activity</small></div><b>›</b></button>
+          <button type="button" class="quick-action" (click)="showView('settings')"><span>⚙</span><div><strong>Admin settings</strong><small>Manage your account</small></div><b>›</b></button>
+        </section>
+      </div>
+    </section>
+
+    <section class="admin-inspection-panel" *ngIf="!showProfile && activeView === 'new-inspection'">
+      <header class="admin-form-heading">
+        <div><p>ADMIN PANEL</p><h1>Inspection Form</h1><span>Record a material delivery inspection</span></div>
+        <button type="button" class="home-link-button" (click)="showView('inspections')">View inspections</button>
+      </header>
+
+      <div class="admin-inspection-form">
+        <div class="admin-form-title"><h2>Hauler &amp; Material Details</h2></div>
+        <form [formGroup]="inspectionForm" (ngSubmit)="submitAdminInspection()">
+          <div class="penalty-rate-editor">
+            <div><label for="adminPenaltyRate">Penalty rate per excess m³</label><small>Only administrators can change this rate. Field Officer forms use the saved value.</small></div>
+            <div class="penalty-rate-controls"><input id="adminPenaltyRate" type="number" min="1" step="1" [formControl]="penaltyRateControl" /><button type="button" class="admin-primary-button" (click)="savePenaltyRate()">Save rate</button></div>
+          </div>
+          <div class="admin-form-group"><label for="adminHaulerName">Name of Hauler *</label><input id="adminHaulerName" formControlName="haulerName" type="text" placeholder="Enter hauler name" /></div>
+          <div class="admin-form-row">
+            <div class="admin-form-group"><label for="adminTruckPlate">Truck Plate Number *</label><input id="adminTruckPlate" formControlName="truckPlate" type="text" placeholder="e.g., ABC-1234" /></div>
+            <div class="admin-form-group admin-time-field"><label for="adminTime">Time *</label><input id="adminTime" formControlName="time" type="time" /></div>
+          </div>
+          <div class="admin-form-group"><label>Truck Type *</label><div class="admin-radio-group"><label><input type="radio" formControlName="truckType" [value]="truckTypes[0]" /> 6 Wheelers</label><label><input type="radio" formControlName="truckType" [value]="truckTypes[1]" /> 10 Wheelers</label></div></div>
+          <div class="admin-form-group"><label for="adminAddress">Address *</label><input id="adminAddress" formControlName="address" type="text" placeholder="Enter complete address" /></div>
+          <div class="admin-form-group"><label for="adminSource">Source of Material *</label><input id="adminSource" formControlName="sourceOfMaterial" type="text" placeholder="Enter source location" /></div>
+          <div class="admin-form-group"><label>Kind of Material *</label><div class="admin-radio-group"><label><input type="radio" formControlName="kindOfMaterial" value="Sand" /> Sand</label><label><input type="radio" formControlName="kindOfMaterial" value="Gravel" /> Gravel</label><label><input type="radio" formControlName="kindOfMaterial" value="Filling Materials" /> Filling Materials</label></div></div>
+          <div class="admin-form-group"><label for="adminQuantity">Quantity *</label><select id="adminQuantity" formControlName="quantity"><option *ngFor="let option of quantityOptions" [value]="option">{{ option }}</option></select></div>
+          <div class="admin-calculation"><div><span>Allowed volume</span><strong>{{ allowedVolume }} m³</strong></div><div><span>Excess volume</span><strong>{{ excessVolume }} m³</strong></div><div><span>Penalty</span><strong>₱{{ penaltyAmount.toLocaleString() }}</strong></div></div>
+          <div class="admin-form-group"><label for="adminPlace">Place of Delivery *</label><input id="adminPlace" formControlName="placeOfDelivery" type="text" placeholder="Enter delivery destination" /></div>
+          <div class="admin-form-group"><label for="adminReceipt">Delivery Receipt # *</label><input id="adminReceipt" formControlName="deliveryReceipt" type="text" placeholder="e.g., DR-2026-001" /></div>
+          <div class="admin-form-actions"><button type="button" class="admin-secondary-button" (click)="resetAdminInspection()">Clear</button><button type="submit" class="admin-primary-button" [disabled]="isSubmittingInspection">{{ isSubmittingInspection ? 'Submitting...' : 'Submit inspection' }}</button></div>
+        </form>
+      </div>
+    </section>
+
+    <section class="content-panel" *ngIf="!showProfile && activeView === 'inspections'">
+      <div class="content-header">
+        <div>
+          <h1>Inspections</h1>
+          <p>Business inspection records</p>
+        </div>
+        <div class="report-menu">
+          <button type="button" class="report-button" (click)="toggleReportOptions()">
+            <svg class="report-button-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M7 8V4h10v4" />
+              <rect x="5" y="13" width="14" height="7" rx="1" ry="1" />
+              <rect x="4" y="8" width="16" height="7" rx="2" ry="2" />
+              <circle cx="17" cy="11.5" r="0.8" />
+            </svg>
+            <span>Generate Report</span>
+          </button>
+
+          <div class="report-options" *ngIf="reportOptionsOpen">
+            <button type="button" class="report-option" (click)="generateDashboardReport('daily')">Daily</button>
+            <button type="button" class="report-option" (click)="generateDashboardReport('monthly')">Monthly</button>
+          </div>
+        </div>
       </div>
 
       <div class="metrics-grid">
-        <div class="metric-card card-blue">
-          <div class="metric-data">
-            <span class="metric-value">4</span>
-            <span class="metric-label">Business Inspections</span>
-          </div>
-          <div class="metric-icon">📋</div>
-        </div>
-        <div class="metric-card card-green">
-          <div class="metric-data">
-            <span class="metric-value text-green">2</span>
-            <span class="metric-label">Completed</span>
-          </div>
-          <div class="metric-icon icon-green">✓</div>
-        </div>
-        <div class="metric-card card-orange">
-          <div class="metric-data">
-            <span class="metric-value text-orange">1</span>
-            <span class="metric-label">Pending</span>
-          </div>
-          <div class="metric-icon icon-orange">🕒</div>
-        </div>
-        <div class="metric-card card-red">
-          <div class="metric-data">
-            <span class="metric-value text-red">1</span>
-            <span class="metric-label">Flagged</span>
-          </div>
-          <div class="metric-icon icon-red">!</div>
-        </div>
-        <div class="metric-card card-blue-alt">
-          <div class="metric-data">
-            <span class="metric-value text-blue">₱68,500</span>
-            <span class="metric-label">Collected</span>
-          </div>
-          <div class="metric-icon icon-blue">₱</div>
-        </div>
+        <article class="metric-card total-card">
+          <div class="metric-number">{{ inspections.length }}</div>
+          <div class="metric-label">TOTAL</div>
+        </article>
+
+        <article class="metric-card success-card">
+          <div class="metric-number">{{ completedCount }}</div>
+          <div class="metric-label">COMPLETED</div>
+          <div class="metric-icon">✓</div>
+        </article>
+
+        <article class="metric-card warning-card">
+          <div class="metric-number">{{ pendingCount }}</div>
+          <div class="metric-label">PENDING</div>
+          <div class="metric-icon">◔</div>
+        </article>
+
+        <article class="metric-card collected-card">
+          <div class="metric-number">₱{{ collectedAmount.toLocaleString() }}</div>
+          <div class="metric-label">COLLECTED</div>
+          <div class="metric-icon">₱</div>
+        </article>
       </div>
 
-      <div class="data-table-container">
-        
-        <div class="search-bar-wrapper">
-          <span class="search-icon">🔍</span>
-          <input 
-            type="text" 
-            [formControl]="searchControl" 
-            placeholder="Search inspections..." 
-            class="search-input"
+      <div class="toolbar-wrap">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input
+            type="text"
+            [formControl]="searchControl"
+            placeholder="Search by ID, business, address, or inspector..."
           />
         </div>
 
-        <div class="responsive-table">
-          <table class="data-table">
+        <div class="toolbar-sort">
+          <span class="sort-label">Sort by Name</span>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-group">
+          <span class="filter-label">Status:</span>
+          <button type="button" class="filter-chip" [class.active]="selectedStatus === 'All'" (click)="setStatusFilter('All')">All</button>
+          <button type="button" class="filter-chip" [class.active]="selectedStatus === 'Completed'" (click)="setStatusFilter('Completed')">Completed</button>
+          <button type="button" class="filter-chip" [class.active]="selectedStatus === 'Pending'" (click)="setStatusFilter('Pending')">Pending</button>
+        </div>
+
+        <div class="filter-group right-group">
+          <span class="filter-label">Payment:</span>
+          <button type="button" class="filter-chip" [class.active]="selectedPayment === 'All'" (click)="setPaymentFilter('All')">All</button>
+          <button type="button" class="filter-chip" [class.active]="selectedPayment === 'Paid'" (click)="setPaymentFilter('Paid')">Paid</button>
+          <button type="button" class="filter-chip" [class.active]="selectedPayment === 'Unpaid'" (click)="setPaymentFilter('Unpaid')">Unpaid</button>
+        </div>
+
+        <div class="filter-sort">
+          <span class="filter-label">Sort:</span>
+          <select class="sort-button" [value]="selectedSort" (change)="setSort($any($event.target).value)">
+            <option value="date-desc">Date (newest)</option>
+            <option value="date-asc">Date (oldest)</option>
+            <option value="name-asc">Name</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="inspection-workbench panel-open" *ngIf="selectedInspection">
+        <div class="table-wrap">
+          <table class="inspection-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>BUSINESS NAME</th>
+                <th>SOURCE OF MATERIAL</th>
                 <th>ADDRESS</th>
                 <th>TYPE</th>
                 <th>STATUS</th>
                 <th>PAYMENT</th>
+                <th>INSPECTOR</th>
                 <th>DATE</th>
-                <th class="text-right">AMOUNT</th>
+                <th class="align-right">PENALTY</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let record of filteredInspections">
-                <td class="font-bold text-dark">{{ record.id }}</td>
-                <td class="font-medium text-dark">{{ record.businessName }}</td>
-                <td class="text-muted location-cell">
-                  <span class="pin-icon">📍</span> {{ record.address }}
-                </td>
-                <td class="text-dark">{{ record.type }}</td>
+              <tr *ngFor="let record of filteredInspections" (click)="openInspection(record)" class="inspection-row">
+                <td class="id-cell">{{ record.id }}</td>
+                <td class="business-cell">{{ record.businessName }}</td>
+                <td>{{ record.address }}</td>
+                <td><span class="type-pill" [ngClass]="record.type.toLowerCase().replace(' ', '-')">{{ record.type }}</span></td>
+                <td><span class="status-badge" [ngClass]="getEffectiveStatus(record).toLowerCase()">{{ getEffectiveStatus(record) }}</span></td>
                 <td>
-                  <span class="badge status-{{ record.status | lowercase }}">
-                    {{ record.status }}
+                  <span
+                    class="payment-toggle"
+                    [ngClass]="record.paymentStatus.toLowerCase()"
+                  >
+                    {{ record.paymentStatus }}
                   </span>
                 </td>
-                <td>
-                  <button
-                    type="button"
-                    class="payment-action-btn"
-                    [class.paid]="record.paymentStatus === 'Paid'"
-                    [class.unpaid]="record.paymentStatus === 'Unpaid'"
-                    (click)="togglePaymentStatus(record)">
-                    {{ record.paymentStatus }}
-                  </button>
-                </td>
-                <td class="text-muted">{{ record.date }}</td>
-                <td class="text-right font-bold text-dark">
-                  {{ record.amount !== null ? '₱' + record.amount.toLocaleString() : '—' }}
-                </td>
+                <td class="inspector-cell">{{ record.inspector }}</td>
+                <td>{{ record.date }}</td>
+                <td class="align-right amount-cell">{{ record.amount !== null ? '₱' + record.amount.toLocaleString() : '—' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
+        <aside class="inspection-detail-panel">
+          <button type="button" class="detail-close" aria-label="Close inspection detail" (click)="closeInspection()">×</button>
+
+          <div class="detail-header">
+            <div class="detail-id">{{ selectedInspection.id }}</div>
+            <h2>{{ selectedInspection.businessName }}</h2>
+            <div class="detail-address">◌ {{ selectedInspection.address }}</div>
+          </div>
+
+          <div class="detail-meta-row">
+            <span class="detail-status-pill" [ngClass]="getEffectiveStatus(selectedInspection).toLowerCase()"><span class="pill-dot"></span>{{ getEffectiveStatus(selectedInspection) }}</span>
+            <span class="detail-payment-pill" [ngClass]="selectedInspection.paymentStatus.toLowerCase()">{{ selectedInspection.paymentStatus }}</span>
+            <span class="detail-type-pill">{{ selectedInspection.type }}</span>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-field">
+              <label>Inspection Date</label>
+              <span>{{ selectedInspection.date }}</span>
+            </div>
+            <div class="detail-field">
+              <label>Inspector</label>
+              <span>{{ selectedInspection.inspector }}</span>
+            </div>
+            <div class="detail-field">
+              <label>Penalty</label>
+              <span>{{ selectedInspection.amount !== null ? '₱' + selectedInspection.amount.toLocaleString() : '—' }}</span>
+            </div>
+            <div class="detail-field">
+              <label>Business Type</label>
+              <span>{{ selectedInspection.type }}</span>
+            </div>
+          </div>
+
+          <div class="detail-calculation" *ngIf="selectedInspection.excessVolume !== undefined">
+            <span>Quantity: {{ selectedInspection.quantityCubicMeters }} m³</span>
+            <span>Excess: {{ selectedInspection.excessVolume }} m³</span>
+          </div>
+
+          <div class="detail-notes">
+            <label>Receipt Number</label>
+            <input
+              class="payment-input"
+              type="text"
+              placeholder="Enter receipt number"
+              [value]="selectedInspection.receiptNumber || ''"
+              (input)="selectedInspection.receiptNumber = $any($event.target).value"
+            />
+          </div>
+
+          <div class="detail-notes">
+            <label>Cashier Number</label>
+            <input
+              class="payment-input"
+              type="text"
+              placeholder="Enter cashier number"
+              [value]="selectedInspection.cashierNumber || ''"
+              (input)="selectedInspection.cashierNumber = $any($event.target).value"
+            />
+          </div>
+
+          <div class="detail-actions">
+            <button type="button" class="secondary-action" (click)="$event.stopPropagation(); markAsPaid(selectedInspection)">Mark as Paid</button>
+            <button type="button" class="delete-action" (click)="$event.stopPropagation(); deleteSelectedInspection(selectedInspection)">Delete</button>
+            <button type="button" class="done-action" (click)="$event.stopPropagation(); closeInspection()">Done</button>
+          </div>
+
+        </aside>
       </div>
 
-    </div>
-  </main>
+      <div class="table-wrap" *ngIf="!selectedInspection">
+        <div class="dashboard-state" *ngIf="loading && !filteredInspections.length">Loading inspection records...</div>
+        <div class="dashboard-state error" *ngIf="!loading && loadError">Could not refresh inspection records.</div>
+        <table class="inspection-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>SOURCE OF MATERIAL</th>
+              <th>ADDRESS</th>
+              <th>TYPE</th>
+              <th>STATUS</th>
+              <th>PAYMENT</th>
+              <th>INSPECTOR</th>
+              <th>DATE</th>
+              <th class="align-right">PENALTY</th>
+            </tr>
+          </thead>
+          <tbody *ngIf="filteredInspections.length">
+            <tr *ngFor="let record of filteredInspections" (click)="openInspection(record)" class="inspection-row">
+              <td class="id-cell">{{ record.id }}</td>
+              <td class="business-cell">{{ record.businessName }}</td>
+              <td>{{ record.address }}</td>
+              <td><span class="type-pill" [ngClass]="record.type.toLowerCase().replace(' ', '-')">{{ record.type }}</span></td>
+              <td><span class="status-badge" [ngClass]="getEffectiveStatus(record).toLowerCase()">{{ getEffectiveStatus(record) }}</span></td>
+              <td>
+                <span
+                  class="payment-toggle"
+                  [ngClass]="record.paymentStatus.toLowerCase()"
+                >
+                  {{ record.paymentStatus }}
+                </span>
+              </td>
+              <td class="inspector-cell">{{ record.inspector.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase() }}</td>
+              <td>{{ record.date }}</td>
+              <td class="align-right amount-cell">{{ record.amount !== null ? '₱' + record.amount.toLocaleString() : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
+    <section class="analytics-panel" *ngIf="!showProfile && activeView === 'analytics'">
+      <div class="analytics-header">
+        <div>
+          <h1>Tax Revenue Trend Forecasting</h1>
+        </div>
+      </div>
+
+      <div class="analytics-summary">
+        <div class="summary-box">
+          <span class="summary-label">Collected to date</span>
+          <strong>₱{{ collectedAmount.toLocaleString() }}</strong>
+        </div>
+        <div class="summary-box">
+          <span class="summary-label">Next month forecast</span>
+          <strong>No forecast data</strong>
+        </div>
+        <div class="summary-box">
+          <span class="summary-label">Six-month forecast</span>
+          <strong>No forecast data</strong>
+        </div>
+      </div>
+
+      <div class="analytics-chart">
+        <p *ngIf="!inspections.length">No revenue data available from the inspections API.</p>
+      </div>
+
+      <div class="chart-legend">
+        <span><i class="legend-dot actual-dot"></i>Actual revenue</span>
+        <span><i class="legend-dot forecast-dot"></i>Forecast revenue</span>
+      </div>
+    </section>
+
+    <section class="users-panel" *ngIf="!showProfile && activeView === 'users'">
+      <div class="users-heading">
+        <div><p class="crumb-label">ADMIN PANEL</p><h1>Users</h1></div>
+      </div>
+      <div class="user-metrics">
+        <article><strong>{{ users.length }}</strong><span>Total users</span></article>
+        <article class="active-metric"><strong>{{ activeUserCount }}</strong><span>Active</span></article>
+        <article><strong>{{ inactiveUserCount }}</strong><span>Inactive</span></article>
+      </div>
+      <div class="users-table-wrap">
+        <div class="users-toolbar">
+          <div class="user-search"><span>⌕</span><input [formControl]="userSearchControl" placeholder="Search by name, email, or department..." /></div>
+          <div class="user-filter"><button type="button" *ngFor="let status of ['All', 'Active', 'Inactive']" [class.active]="selectedUserStatus === status" (click)="setUserStatus(status)">{{ status }}</button></div>
+        </div>
+        <table class="users-table"><thead><tr><th>User</th><th>Role</th><th>Joined</th><th>Last active</th><th>Inspections</th><th>Status</th></tr></thead>
+          <tbody><tr *ngFor="let user of filteredUsers"><td><div class="user-identity"><span class="user-avatar">{{ user.name.split(' ').map(part => part[0]).join('') }}</span><div><strong>{{ user.name }}</strong><small>{{ user.email }}</small></div></div></td><td><span class="role-badge">{{ user.role }}</span></td><td>{{ user.joined }}</td><td>{{ user.lastActive }}</td><td class="user-inspections">{{ user.inspections }}</td><td><button type="button" class="user-status status-action" [class.inactive]="user.status === 'Inactive'" (click)="toggleUserStatus(user)">{{ user.status }}</button></td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-settings-panel" *ngIf="!showProfile && activeView === 'settings'">
+      <header class="admin-settings-heading"><p>ADMIN PANEL</p><h1>Settings</h1></header>
+
+      <section class="admin-settings-card">
+        <div class="admin-settings-hero"><span>AU</span><div><h2>Admin User</h2><p>admin@taxinspection.gov</p><small>ADMINISTRATOR · TAX COMPLIANCE DIVISION</small></div></div>
+        <div class="admin-settings-section"><h2>Profile</h2>
+          <div class="admin-setting-row"><label>Full Name</label><span>Admin User</span></div>
+          <div class="admin-setting-row"><label>Email Address</label><span>admin@taxinspection.gov</span></div>
+          <div class="admin-setting-row"><div><label>Role</label><small>Contact your system administrator to change roles</small></div><span class="readonly-setting">Administrator</span></div>
+          <div class="admin-setting-row"><label>Department</label><span>City Finance Department</span></div>
+          <div class="admin-setting-row"><label>Division</label><span>Tax Inspection Division</span></div>
+        </div>
+      </section>
+
+      <section class="admin-security-card"><h2>Security</h2>
+        <div class="admin-setting-row"><div><label>Password</label><small>Last changed 30 days ago</small></div><button type="button" class="admin-setting-button" (click)="showSettingsNotice('Password change request opened.')">Change Password</button></div>
+        <div class="admin-setting-row"><div><label>Active Sessions</label><small>Devices currently signed in</small></div><span class="admin-session-status">1 active session - this device</span></div>
+        <div class="admin-setting-row"><div><label>Sign out</label><small>End this session on the current device</small></div><button type="button" class="admin-setting-button signout" (click)="onSignOut()">Logout</button></div>
+      </section>
+      <p class="admin-settings-notice" *ngIf="settingsNotice">{{ settingsNotice }}</p>
+    </section>
+  </main>
 </div>

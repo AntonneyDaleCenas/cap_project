@@ -1,68 +1,77 @@
 <div class="login-container">
+  <div class="login-brand-panel" aria-label="City tax inspection portal">
+    <img class="city-seal" src="cdo.png" alt="City of Cagayan de Oro seal" />
+    <div class="brand-panel-copy">
+      <strong>City Tax Inspection</strong>
+      <span>Official access portal</span>
+    </div>
+  </div>
+
   <div class="login-card">
     <div class="brand-header">
-      <div class="brand-logo">TI</div>
       <div class="brand-text">
-        <h1>Tax Inspection</h1>
-        <p>Create your account</p>
+        <h1>Create account</h1>
+        <p>Register as a field officer</p>
       </div>
     </div>
 
     <h2 class="form-title">Sign up</h2>
 
-    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="login-form">
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="login-form" autocomplete="off">
       <div class="form-group">
         <label for="firstName">First name</label>
-        <input id="firstName" type="text" formControlName="firstName" placeholder="Jane" />
+        <input id="firstName" type="text" formControlName="firstName" autocomplete="off" placeholder="Jane" />
       </div>
 
       <div class="form-group">
         <label for="lastName">Last name</label>
-        <input id="lastName" type="text" formControlName="lastName" placeholder="Doe" />
+        <input id="lastName" type="text" formControlName="lastName" autocomplete="off" placeholder="Doe" />
       </div>
 
       <div class="form-group">
         <label for="email">Email</label>
-        <input id="email" type="email" formControlName="email" placeholder="you@example.com" />
+        <input id="email" type="email" formControlName="email" autocomplete="off" placeholder="you@example.com" />
       </div>
 
       <div class="form-group">
         <label for="employeeId">Employee ID</label>
-        <input id="employeeId" type="text" formControlName="employeeId" placeholder="EMP123" />
-      </div>
-
-      <div class="form-group role-group">
-        <span>Role</span>
-        <label class="radio-option">
-          <input type="radio" formControlName="role" value="Field Officer" />
-          Field Officer
-        </label>
-        <label class="radio-option">
-          <input type="radio" formControlName="role" value="Admin" />
-          Admin
-        </label>
+        <input id="employeeId" type="text" formControlName="employeeId" autocomplete="off" placeholder="EMP123" />
       </div>
 
       <div class="form-group">
         <label for="password">Password</label>
-        <input id="password" type="password" formControlName="password" placeholder="••••••••" />
+        <input id="password" type="password" formControlName="password" autocomplete="off" placeholder="••••••••" [class.password-mismatch]="isPasswordMismatch()" />
+        <small class="validation-hint">Use at least 6 characters, including 1 uppercase letter and 1 number.</small>
       </div>
 
       <div class="form-group">
         <label for="confirmPassword">Confirm password</label>
-        <input id="confirmPassword" type="password" formControlName="confirmPassword" placeholder="••••••••" />
+        <input id="confirmPassword" type="password" formControlName="confirmPassword" autocomplete="off" placeholder="••••••••" [class.password-mismatch]="isPasswordMismatch()" />
       </div>
 
       <div class="form-group checkbox-row">
-        <label>
+        <label class="privacy-consent">
           <input type="checkbox" formControlName="terms" />
-          Accept terms and conditions
+          <span>
+            I agree to the
+            <button type="button" class="legal-link" (click)="toggleTerms($event)" [attr.aria-expanded]="showTerms">Terms and Conditions</button>
+            and confirm that I have read and understood the
+            <a class="legal-link" href="https://lawphil.net/statutes/repacts/ra2012/ra_10173_2012.html" target="_blank" rel="noopener noreferrer">Philippine Data Privacy Act</a>
+            notice governing the collection and processing of my personal data.
+          </span>
         </label>
+        <div class="terms-panel" *ngIf="showTerms">
+          <strong>Terms and Conditions</strong>
+          <p>Use this portal only to submit accurate inspection information for official tax inspection work. Keep your account credentials confidential and do not submit another person's information without authorization.</p>
+        </div>
       </div>
 
-      <button type="submit" class="btn-submit" [disabled]="registerForm.invalid">
-        Create account
-      </button>
+      <div class="signup-actions">
+        <button type="button" class="btn-cancel" (click)="goBack()">Cancel</button>
+        <button type="submit" class="btn-submit" [disabled]="isSubmitting || (registerForm.invalid && !registerForm.hasError('passwordsMismatch'))">
+          {{ isSubmitting ? 'Creating account...' : 'Create account' }}
+        </button>
+      </div>
     </form>
   </div>
 </div>

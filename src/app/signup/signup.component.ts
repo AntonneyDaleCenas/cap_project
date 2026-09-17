@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { InspectionDataService } from '../services/inspection-data.service';
 
 @Component({
   selector: 'app-signup',
@@ -12,8 +13,10 @@ import { Router, RouterModule } from '@angular/router';
 })
 export class SignupComponent implements OnInit {
   registerForm!: FormGroup;
+  isSubmitting = false;
+  showTerms = false;
 
-  constructor(private fb: FormBuilder, private router: Router) {}
+  constructor(private fb: FormBuilder, private router: Router, private inspectionData: InspectionDataService) {}
 
   ngOnInit(): void {
     this.registerForm = this.fb.group(
@@ -22,8 +25,7 @@ export class SignupComponent implements OnInit {
         lastName: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
         employeeId: [''],
-        role: ['Field Officer', Validators.required],
-        password: ['', [Validators.required, Validators.minLength(6)]],
+        password: ['', [Validators.required, Validators.minLength(6), this.passwordComplexityValidator]],
         confirmPassword: ['', Validators.required],
         terms: [false, Validators.requiredTrue]
       },
@@ -31,6 +33,14 @@ export class SignupComponent implements OnInit {
         validators: this.passwordsMatchValidator
       }
     );
+  }
+
+  private passwordComplexityValidator(control: { value: string }) {
+    const value = control.value ?? '';
+    const hasMinLength = value.length >= 6;
+    const hasUppercase = /[A-Z]/.test(value);
+    const hasNumber = /\d/.test(value);
+    return value && hasMinLength && hasUppercase && hasNumber ? null : { passwordComplexity: true };
   }
 
   private passwordsMatchValidator(form: FormGroup) {
@@ -44,13 +54,53 @@ export class SignupComponent implements OnInit {
     return !!(field && field.invalid && (field.touched || field.dirty));
   }
 
-  onSubmit(): void {
+  isPasswordMismatch(): boolean {
+    const password = this.registerForm.get('password')?.value;
+    const confirmPassword = this.registerForm.get('confirmPassword')?.value;
+    return !!password && !!confirmPassword && password !== confirmPassword;
+  }
+
+  async onSubmit(): Promise<void> {
+    if (this.registerForm.hasError('passwordsMismatch')) {
+      this.registerForm.get('password')?.markAsTouched();
+      this.registerForm.get('confirmPassword')?.markAsTouched();
+      alert('Passwords do not match. Please enter the same password in both fields.');
+      return;
+    }
+
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
     }
 
-    console.log('Signup form submitted', this.registerForm.value);
+    const value = this.registerForm.value;
+    this.isSubmitting = true;
+
+    try {
+      await this.inspectionData.createUser({
+        name: `${value.firstName} ${value.lastName}`.trim(),
+        email: value.email,
+        password: value.password,
+        role: 'officer',
+        status: 'inactive'
+      });
+      alert('Account created successfully');
+      await this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('Failed to create account:', error);
+      alert(error instanceof Error ? `Account could not be created: ${error.message}` : 'The account could not be created');
+    } finally {
+      this.isSubmitting = false;
+    }
+  }
+
+  goBack(): void {
     this.router.navigate(['/login']);
+  }
+
+  toggleTerms(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showTerms = !this.showTerms;
   }
 }

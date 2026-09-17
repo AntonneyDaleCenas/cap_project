@@ -1,64 +1,228 @@
-<div class="inspection-form" style="max-width:900px;margin:24px auto;font-family:Arial,Helvetica,sans-serif">
-	<h3 style="color:#2b4a66;border-left:4px solid #3b82f6;padding-left:10px">Hauler & Material Details</h3>
-
-	<form>
-		<div style="margin-top:16px">
-			<label for="haulerName">Name of Hauler *</label>
-			<input id="haulerName" name="haulerName" type="text" placeholder="Enter hauler name" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
-		</div>
-
-		<div style="display:flex;gap:16px;margin-top:16px">
-			<div style="flex:1">
-				<label for="truckPlate">Truck Plate Number *</label>
-				<input id="truckPlate" name="truckPlate" type="text" placeholder="e.g., ABC-1234" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+<div class="inspector-shell">
+	<aside class="inspector-sidebar" aria-label="Inspector navigation">
+		<div class="inspector-brand">
+			<div class="brand-inline">
+				<img *ngIf="profilePicture" class="brand-inline-logo profile-sidebar-image" [src]="profilePicture" alt="Field officer profile" />
+				<div *ngIf="!profilePicture" class="brand-inline-logo">AD</div>
+				<div class="brand-inline-copy">
+					<div class="brand-inline-name">{{ inspectorName }}</div>
+					<div class="brand-inline-subtitle">Field Officer</div>
+				</div>
 			</div>
-			<div style="width:220px">
-				<label for="time">Time *</label>
-				<input id="time" name="time" type="time" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
+			<button type="button" class="brand-settings-button" (click)="openSettings()">Settings</button>
+		</div>
+		<nav class="inspector-nav" aria-label="Field officer navigation">
+			<button type="button" class="inspector-nav-link" [class.active]="activeNav === 'home'" (click)="selectNavigation('home')">
+				<span class="inspector-nav-icon">⌂</span>
+				<span>Home</span>
+			</button>
+			<button type="button" class="inspector-nav-link" [class.active]="activeNav === 'inspections'" (click)="selectNavigation('inspections')">
+				<span class="inspector-nav-icon">▰</span>
+				<span>Inspections</span>
+			</button>
+			<button type="button" class="inspector-nav-link" [class.active]="activeNav === 'pending'" (click)="selectNavigation('pending')">
+				<span class="inspector-nav-icon">◷</span>
+				<span>Pending <b class="pending-count" *ngIf="pendingInspections.length">{{ pendingInspections.length }}</b></span>
+			</button>
+		</nav>
+	</aside>
+
+	<main class="inspector-workspace">
+		<section class="officer-home" *ngIf="!showSettings && activeNav === 'home'">
+			<header class="officer-home-heading">
+				<div>
+					<p class="eyebrow">FIELD OFFICER PORTAL</p>
+					<h1>Home</h1>
+					<p>Review your inspection activity and start a new submission.</p>
+				</div>
+				<button type="button" class="officer-primary-action" (click)="selectNavigation('inspections')">Open Inspection Form</button>
+			</header>
+
+			<section class="officer-home-metrics" aria-label="Field officer overview">
+				<article><span>Today's inspections</span><strong>{{ todayInspectionCount }}</strong><small>Records submitted today</small></article>
+				<article class="ready-card"><span>Submission status</span><strong>{{ isSubmitting ? 'Saving' : 'Ready' }}</strong><small>{{ lastSubmittedAt ? 'Last recorded ' + lastSubmittedAt : 'Ready for a new inspection' }}</small></article>
+			</section>
+
+			<section class="officer-home-card home-graph-panel">
+				<div class="officer-home-card-header">
+					<div>
+						<h2>Inspection statistics</h2>
+						<p>Daily and monthly inspection trend</p>
+					</div>
+					<div class="analytics-toggle" aria-label="Chart range selector">
+						<button type="button" [class.active]="chartMode === 'daily'" (click)="chartMode = 'daily'">Daily</button>
+						<button type="button" [class.active]="chartMode === 'monthly'" (click)="chartMode = 'monthly'">Monthly</button>
+					</div>
+				</div>
+				<div class="home-graph-body">
+					<p *ngIf="!inspectionTrend.length">No inspection data available yet.</p>
+					<svg *ngIf="inspectionTrend.length" viewBox="0 0 620 200" role="img" aria-label="Inspection trend chart" preserveAspectRatio="none">
+						<g class="chart-gridlines">
+							<line x1="30" y1="20" x2="590" y2="20"></line>
+							<line x1="30" y1="80" x2="590" y2="80"></line>
+							<line x1="30" y1="140" x2="590" y2="140"></line>
+							<line x1="30" y1="180" x2="590" y2="180"></line>
+						</g>
+						<path [attr.d]="chartLinePath" class="chart-line"></path>
+						<g *ngFor="let point of chartPoints">
+							<circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" class="chart-point"></circle>
+							<text [attr.x]="point.x" [attr.y]="195" text-anchor="middle" class="chart-label">{{ point.label }}</text>
+						</g>
+					</svg>
+				</div>
+			</section>
+
+			<section class="officer-home-card">
+				<h2>Field activity</h2>
+				<p>Use the Inspection Form to record hauler, material, delivery, and volume details.</p>
+				<button type="button" class="officer-secondary-action" (click)="selectNavigation('inspections')">Start inspection</button>
+			</section>
+		</section>
+
+		<div *ngIf="!showSettings && activeNav === 'inspections'">
+			<header class="inspector-topbar">
+				<div>
+					<p class="eyebrow">FIELD OFFICER PORTAL</p>
+					<h1>Inspection form</h1>
+					<p class="topbar-copy">Record the details of a material delivery inspection.</p>
+				</div>
+			</header>
+
+			<section id="summary" class="dashboard-summary" aria-label="Inspection summary">
+				<article class="summary-card inspections-card">
+					<span class="summary-label">Today's inspections</span>
+					<strong>{{ todayInspectionCount }}</strong>
+					<span class="summary-detail">{{ todayInspectionCount === 1 ? 'record submitted' : 'records submitted' }}</span>
+				</article>
+				<article class="summary-card status-card">
+					<span class="summary-label">Submission status</span>
+					<strong>{{ isSubmitting ? 'Saving' : 'Ready' }}</strong>
+					<span class="summary-detail">{{ lastSubmittedAt ? 'Last recorded ' + lastSubmittedAt : 'No entries submitted yet' }}</span>
+				</article>
+			</section>
+
+			<div id="new-inspection" class="inspection-form">
+				<div class="inspection-header">
+					<div>
+						<h2 class="inspection-title">Hauler & Material Details</h2>
+					</div>
+				</div>
+
+				<form [formGroup]="inspectionForm" (ngSubmit)="onSubmit()">
+					<div class="form-group">
+						<label for="haulerName">Name of Hauler *</label>
+						<input id="haulerName" formControlName="haulerName" type="text" class="inspection-input" placeholder="Enter hauler name">
+					</div>
+
+					<div class="row row-gap">
+						<div class="form-group flex-grow">
+							<label for="truckPlate">Truck Plate Number *</label>
+							<input id="truckPlate" formControlName="truckPlate" type="text" class="inspection-input" placeholder="e.g., ABC-1234">
+						</div>
+						<div class="form-group fixed-width">
+							<label for="time">Time *</label>
+							<input id="time" formControlName="time" type="time" class="inspection-input">
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label>Truck Type *</label>
+						<div class="radio-group">
+							<label><input type="radio" formControlName="truckType" [value]="truckTypes[0]"> 6 Wheelers</label>
+							<label><input type="radio" formControlName="truckType" [value]="truckTypes[2]"> 10 Wheelers</label>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="address">Address *</label>
+						<input id="address" formControlName="address" type="text" class="inspection-input" placeholder="Enter complete address">
+					</div>
+
+					<div class="form-group">
+						<label for="source">Source of Material *</label>
+						<input id="source" formControlName="sourceOfMaterial" type="text" class="inspection-input" placeholder="Enter source location">
+					</div>
+
+					<div class="form-group">
+						<label>Kind of Material *</label>
+						<div class="radio-group">
+							<label><input type="radio" formControlName="kindOfMaterial" value="Sand" > Sand</label>
+							<label><input type="radio" formControlName="kindOfMaterial" value="Gravel"> Gravel</label>
+							<label><input type="radio" formControlName="kindOfMaterial" value="Filling Materials"> Filling Materials</label>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="quantity">Quantity *</label>
+						<select id="quantity" formControlName="quantity" class="inspection-input">
+							<option *ngFor="let option of quantityOptions" [value]="option">{{ option }}</option>
+						</select>
+					</div>
+
+					<div class="calculation-panel" aria-live="polite">
+						<div><span>Allowed volume</span><strong>{{ allowedVolume }} m³</strong></div>
+						<div><span>Excess volume</span><strong>{{ excessVolume }} m³</strong></div>
+						<div><span>Penalty</span><strong>₱{{ penaltyAmount.toLocaleString() }}</strong></div>
+					</div>
+
+					<div class="form-group">
+						<label for="placeOfDelivery">Place of Delivery *</label>
+						<input id="placeOfDelivery" formControlName="placeOfDelivery" type="text" class="inspection-input" placeholder="Enter delivery destination">
+					</div>
+
+					<div class="form-group">
+						<label for="receipt">Delivery Receipt # *</label>
+						<input id="receipt" formControlName="deliveryReceipt" type="text" class="inspection-input" placeholder="e.g., DR-2026-001">
+					</div>
+
+					<div class="form-actions">
+						<button type="button" class="btn-clear" (click)="resetForm()">Clear</button>
+						<button type="submit" class="btn-primary" [disabled]="isSubmitting">{{ isSubmitting ? 'Submitting...' : 'Submit inspection' }}</button>
+					</div>
+				</form>
 			</div>
 		</div>
 
-		<div style="margin-top:16px">
-			<label>Truck Type *</label>
-			<div style="margin-top:8px;display:flex;gap:16px;align-items:center">
-				<label><input type="radio" name="truckType" value="6"> 6 Wheelers</label>
-				<label><input type="radio" name="truckType" value="8" checked> 8 Wheelers</label>
-				<label><input type="radio" name="truckType" value="10"> 10 Wheelers</label>
-			</div>
-		</div>
+		<section class="pending-workspace" *ngIf="!showSettings && activeNav === 'pending'">
+			<header class="inspector-topbar pending-heading">
+				<div><p class="eyebrow">FIELD OFFICER PORTAL</p><h1>Pending submissions</h1><p class="topbar-copy">Offline inspections waiting to be submitted.</p></div>
+				<button type="button" class="officer-primary-action" [disabled]="!isOnline || isSyncingPending" (click)="syncPendingInspections()">{{ isSyncingPending ? 'Syncing...' : 'Submit pending' }}</button>
+			</header>
+			<div class="pending-status" [class.offline]="!isOnline">{{ isOnline ? 'Online - ready to submit pending data' : 'Offline - data will submit automatically when connection returns' }}</div>
+			<p class="pending-sync-notice" *ngIf="pendingSyncNotice">{{ pendingSyncNotice }}</p>
+			<section class="pending-list" *ngIf="pendingInspections.length; else noPendingInspections">
+				<article class="pending-item" *ngFor="let item of pendingInspections">
+					<div class="pending-item-icon">!</div>
+					<div><strong>{{ item.payload['hauler_name'] || 'Inspection record' }}</strong><small>{{ item.payload['address'] || 'No address' }} · Saved {{ item.storedAt | date:'medium' }}</small></div>
+					<span>Waiting</span>
+				</article>
+			</section>
+			<ng-template #noPendingInspections><section class="pending-empty"><strong>No pending inspections</strong><p>All collected inspection data has been submitted.</p></section></ng-template>
+		</section>
 
-		<div style="margin-top:16px">
-			<label for="address">Address *</label>
-			<input id="address" name="address" type="text" placeholder="Enter complete address" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
-		</div>
+		<section class="settings-workspace" *ngIf="showSettings">
+			<header class="settings-topbar">
+				<div><p class="eyebrow">FIELD OFFICER PORTAL</p><h1>Settings</h1></div>
+				<button type="button" class="back-to-inspection" (click)="closeSettings()">Back to inspection</button>
+			</header>
 
-		<div style="margin-top:16px">
-			<label for="source">Source of Material *</label>
-			<input id="source" name="source" type="text" placeholder="Enter source location" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
-		</div>
+			<section class="settings-profile-card">
+				<div class="settings-profile-hero"><div class="profile-picture-wrap"><img *ngIf="profilePicture" class="settings-avatar profile-image" [src]="profilePicture" alt="Field officer profile" /><span *ngIf="!profilePicture" class="settings-avatar">{{ inspectorName.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'FO' }}</span><label class="profile-upload-button" for="profilePicture">Change photo</label><input id="profilePicture" class="profile-picture-input" type="file" accept="image/*" (change)="onProfilePictureSelected($event)" /></div><div><h2>{{ inspectorName }}</h2><p>{{ loggedInInspectorEmail || 'officer@taxinspection.gov' }}</p><small>FIELD OFFICER</small></div></div>
+				<div class="settings-section"><h2>Profile</h2>
+					<div class="settings-row"><label>Full Name</label><span>{{ inspectorName }}</span></div>
+					<div class="settings-row"><label>Email Address</label><span>{{ loggedInInspectorEmail || 'officer@taxinspection.gov' }}</span></div>
+					<div class="settings-row"><div><label>Role</label><small>Contact your system administrator to change roles</small></div><span class="readonly-field">Field Officer</span></div>
+					<div class="settings-row"><label>Department</label><span>City Finance Department</span></div>
+					<div class="settings-row"><label>Division</label><span>Tax Inspection Division</span></div>
+				</div>
+			</section>
 
-		<div style="margin-top:16px">
-			<label>Kind of Material *</label>
-			<div style="margin-top:8px;display:flex;gap:16px;align-items:center">
-				<label><input type="radio" name="materialKind" value="sand" checked> Sand</label>
-				<label><input type="radio" name="materialKind" value="gravel"> Gravel</label>
-				<label><input type="radio" name="materialKind" value="filling"> Filling Materials</label>
-			</div>
-		</div>
-
-		<div style="display:flex;gap:16px;margin-top:16px">
-			<div style="flex:1">
-				<label for="quantity">Quantity *</label>
-				<input id="quantity" name="quantity" type="text" placeholder="e.g., 10 cubic meters" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
-			</div>
-			<div style="flex:1">
-				<label for="receipt">Delivery Receipt # *</label>
-				<input id="receipt" name="receipt" type="text" placeholder="e.g., DR-2026-001" style="display:block;width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:6px;margin-top:6px">
-			</div>
-		</div>
-
-		<div style="margin-top:24px;text-align:right">
-			<button type="submit" style="background:#2563eb;color:#fff;padding:10px 18px;border:none;border-radius:6px;cursor:pointer">Submit</button>
-		</div>
-	</form>
+			<section class="settings-section security-section"><h2>Security</h2>
+				<div class="settings-row"><div><label>Password</label><small>Last changed 30 days ago</small></div><button type="button" class="settings-button" (click)="showSettingsNotice('Password change request opened.')">Change Password</button></div>
+				<div class="settings-row"><div><label>Active Sessions</label><small>Devices currently signed in</small></div><span class="session-status">1 active session - this device</span></div>
+				<div class="settings-row"><div><label>Sign out</label><small>End this session on the current device</small></div><button type="button" class="settings-button signout-button" (click)="logout()">Logout</button></div>
+			</section>
+			<p class="settings-notice" *ngIf="settingsNotice">{{ settingsNotice }}</p>
+		</section>
+	</main>
 </div>
